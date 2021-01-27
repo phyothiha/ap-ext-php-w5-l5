@@ -1,0 +1,52 @@
+DROP DATABASE IF EXISTS `php_shopping`;
+
+CREATE DATABASE `php_shopping`;
+
+DROP TABLE IF EXISTS `users`, `categories`, `products`, `sale_orders`, `sale_orders_detail`;
+
+CREATE TABLE IF NOT EXISTS `users`(
+    `id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `email` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(255) NOT NULL,
+    `address` TEXT NULL DEFAULT NULL,
+    `phone` VARCHAR(30) NULL DEFAULT NULL,
+    `role` VARCHAR(100) NOT NULL,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `categories`(
+    `id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `description` TEXT NULL DEFAULT NULL,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `products`(
+    `id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `description` TEXT NULL DEFAULT NULL,
+    `category_id` INT(11) NOT NULL,
+    `quantity` INT(3) NOT NULL,
+    `price` INT(11) NOT NULL,
+    `image` TEXT NULL DEFAULT NULL,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `sale_orders`(
+    `id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `user_id` INT(11) NOT NULL,
+    `total_price` INT(11) NOT NULL,
+    `order_date` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `sale_orders_detail`(
+    `id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `sale_order_id` INT(11) NOT NULL,
+    `product_id` INT(11) NOT NULL,
+    `quantity` INT(3) NOT NULL,
+    `order_date` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+);
