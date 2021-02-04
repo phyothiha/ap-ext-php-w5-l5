@@ -1,3 +1,60 @@
+<?php
+    $uri = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+    $resource = $uri[1];
+    $current_page = 1;
+    $per_page_items = 10;
+
+    if (isset($_GET['page'])) {
+        $current_page = $_GET['page'];
+    } else {
+        unset($_COOKIE['search']);
+        setcookie('search', null, 0, "/admin");
+    }
+
+    $offset = ($current_page - 1) * $per_page_items;
+
+    if (
+        isset($_GET['search']) || 
+        isset($_COOKIE['search'])
+    ) {
+        $search = $_GET['search'] ?? $_COOKIE['search'];
+
+        setcookie('search', $search, 0, "/admin");
+
+        $stmt = $pdo->prepare("
+            SELECT 
+                COUNT(*) as 'total' 
+            FROM 
+                $resource 
+            WHERE 
+                $search_col LIKE ? 
+            ORDER BY 
+                `id` DESC
+        ");
+        $stmt->execute(["%$search%"]);
+        $aggregate = $stmt->fetch();
+        $total = ceil($aggregate->total / $per_page_items);
+
+        $stmt = $pdo->prepare("
+            SELECT
+                *
+            FROM 
+                $resource 
+            WHERE 
+                $search_col LIKE ?  
+            ORDER BY 
+                `id` DESC 
+            LIMIT ?, ?
+        ");
+
+        $stmt->bindValue(1, "%$search%");
+        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+        $stmt->bindValue(3, $per_page_items, PDO::PARAM_INT);
+        $stmt->execute();
+        $$resource = $stmt->fetchAll();
+    }
+ ?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -32,11 +89,12 @@
                 <!-- SEARCH FORM -->
                 <form class="form-inline ml-3" method="GET" action="<?php echo $_SERVER['PHP_SELF']; ?>">
                     <div class="input-group input-group-sm">
-                        <input name="search" class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search" value="">
+                        <input name="search" class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search" value="<?php echo $_GET['search'] ?? ''; ?>">
                         <div class="input-group-append">
                             <button class="btn btn-navbar" type="submit">
                                 <i class="fas fa-search"></i>
                             </button>
+                            <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-primary rounded-0 px-4">Clear</a>
                         </div>
                     </div>
                 </form>

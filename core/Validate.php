@@ -2,94 +2,123 @@
 
 class Validate
 {
-    protected $rules;
-    protected $pdo;
+    protected static $pdo;
+    
+    protected static $rules;
+
+    protected static $validatedData = [];
 
     public function __construct($pdo)
     {
         $_SESSION['errorMessageBag'] = [];
+
         $_SESSION['oldInputValues'] = [];
 
-        $this->pdo = $pdo;
+        static::$pdo = $pdo;
     }
 
-    public function field($rules = [])
+    public static function field($rules = [])
     {
-        $this->rules = $rules;
+        static::$rules = $rules;
 
-        $this->validation();
+        return static::validation();
     }
 
-    protected function validation()
+    protected static function validation()
     {
         $previous_field = '';
 
-        foreach ($this->rules as $field => $value) {
-            foreach ($value as $key => $rule) {
-                // if there is rule with params
+        foreach (static::$rules as $field => $value) {
+
+            foreach ($value as $rule) {
+
+                // Rule with argument
                 if (strpos($rule, ':')) {
-                    $str_part = explode(':', $rule);
-                    $name = $str_part[0];
-                    $params = $str_part[1];
 
-                    if ($name == 'min' && strlen($_POST[$field]) < $params) 
-                    {
-                        $_SESSION['errorMessageBag'][$field] = "The $field must be at least $params character(s).";
+                    $rule = explode(':', $rule);
+                    $name = $rule[0];
+                    $args = $rule[1];
+
+                    if (
+                        $name == 'min' && 
+                        strlen($_POST[$field]) < $args
+                    ) {
+                        $_SESSION['errorMessageBag'][$field] = "The $field must be at least $args character(s).";
+
                         break;
                     }
 
-                    if ($name == 'max' && strlen($_POST[$field]) > $params) 
-                    {
-                        $_SESSION['errorMessageBag'][$field] = "The $field must not be greater than $params character(s).";
+                    if (
+                        $name == 'max' && 
+                        strlen($_POST[$field]) > $args
+                    ) {
+                        $_SESSION['errorMessageBag'][$field] = "The $field must not be greater than $args character(s).";
+
                         break;
                     }
 
-                    if ($name == 'email') 
-                    {
+                    if (
+                        $name == 'email'
+                    ) {
                         $pattern = '/^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$/';
 
                         // if email address is invalid format.
-                        if (! preg_match($pattern, $_POST[$field])) {
+                        if (
+                            ! preg_match($pattern, $_POST[$field])
+                        ) {
                             $_SESSION['errorMessageBag'][$field] = "Please enter valid email address.";
+
                             break;
                         } else {
                             // vaild but un-acceptable Tld
-                            $accept = explode(',', $params);
+                            $acceptable_tld = explode(',', $args);
 
-                            $request_tld = substr($_POST[$field], strpos($_POST[$field], '.') - strlen($_POST[$field]) + 1);
+                            $tld = substr($_POST[$field], strpos($_POST[$field], '.') - strlen($_POST[$field]) + 1);
 
-                            if(! in_array($request_tld, $accept)) {
-                                $_SESSION['errorMessageBag'][$field] = "The $field field accepted only " . '.' .implode(', .', $accept) . ' TLD name.';
+                            if (
+                                ! in_array($tld, $acceptable_tld)
+                            ) {
+                                $_SESSION['errorMessageBag'][$field] = "The $field field accepted only " . '.' .implode(', .', $acceptable_tld) . ' TLD name.';
+
                                 break;
                             } 
                         }
                     }
 
-                    if ($name == 'unique')
-                    {
-                        $options = explode(',', $params);
+                    if (
+                        $name == 'unique'
+                    ) {
+                        $options = explode(',', $args);
                         $table = $options[0];
                         $column = $options[1];
                         $ignoreID = $options[2] ?? '';
 
-                        if ($ignoreID) {
-                            $stmt = $this->pdo->prepare("
+                        if (
+                            $ignoreID
+                        ) {
+                            $stmt = static::$pdo->prepare("
                                 SELECT * FROM $table WHERE $column = ? AND `id` != ?
+
+                                SELECT EXISTS (
+                                    SELECT * FROM $table WHERE $column = ? AND `id` = ?
+                                ) as `exists`;
                             ");
-                            $stmt->execute([ $_POST[$field], $ignoreID ]);
+                            $stmt->execute([$_POST[$field], $ignoreID]);
 
                             if ($stmt->rowCount()) {
                                 $_SESSION['errorMessageBag'][$field] = "The $field is already exists.";
+
                                 break;
                             }
                         } else {
-                            $stmt = $this->pdo->prepare("
+                            $stmt = static::$pdo->prepare("
                                 SELECT * FROM $table WHERE $column = ?
                             ");
                             $stmt->execute([ $_POST[$field] ]);
 
                             if ($stmt->rowCount()) {
                                 $_SESSION['errorMessageBag'][$field] = "The $field is already exists.";
+
                                 break;
                             }
                         }
@@ -97,12 +126,12 @@ class Validate
 
                     if ($name == 'exists')
                     {
-                        $options = explode(',', $params);
+                        $options = explode(',', $args);
                         $table = $options[0];
                         $column = $options[1];
 
                         if ($column == 'password') {
-                            $stmt = $this->pdo->prepare("
+                            $stmt = static::$pdo->prepare("
                                 SELECT $column FROM $table WHERE `email` = ?
                             ");
                             // fixed logic * email column
@@ -116,7 +145,7 @@ class Validate
                             $role = $options[2];
                             $type = ($options[3] == 'user') ? 0 : 1;
 
-                            $stmt = $this->pdo->prepare("
+                            $stmt = static::$pdo->prepare("
                                 SELECT * FROM $table WHERE $column = ? AND $role = ?
                             ");
                             $stmt->execute([ $_POST[$field], $type ]);
@@ -130,12 +159,12 @@ class Validate
 
                     if ($name == 'ignore' && isset($_POST['_method']) && strtolower($_POST['_method']) == 'put' && empty($_POST[$field]))
                     {
-                        $options = explode(',', $params);
+                        $options = explode(',', $args);
                         $table = $options[0];
                         $column = $options[1];
                         $ignoreID = $options[2] ?? '';
 
-                        $stmt = $this->pdo->prepare("
+                        $stmt = static::$pdo->prepare("
                             SELECT $column FROM $table WHERE `id` = ?
                         ");
                         $stmt->execute([$ignoreID]);
@@ -144,24 +173,38 @@ class Validate
                             break;
                         }
                     }
-                } else {
-                    if ($rule == 'required' && empty($_POST[$field])) 
-                    {
+                } 
+                // Rule without argument
+                else {
+
+                    // Required
+                    if (
+                        $rule == 'required' && 
+                        empty($_POST[$field])
+                    ) {
                         $_SESSION['errorMessageBag'][$field] = "The $field field is required.";
+
                         break;
                     }
 
-                    if ($rule == 'image' && !empty($_FILES[$field]['type']))
-                    {
+                    // Image
+                    if (
+                        $rule == 'image' && 
+                        ! empty($_FILES[$field]['type'])
+                    ) {
                         $uploaded_ext = str_replace('image/', '', $_FILES[$field]['type']);
                         $ext = ['jpeg', 'jpg', 'png'];
 
-                        if (! in_array($uploaded_ext, $ext) ) {
+                        if (
+                            ! in_array($uploaded_ext, $ext)
+                        ) {
                             $_SESSION['errorMessageBag'][$field] = "The $field field accepted only " . implode(', ', $ext) . '.';
+
                             break;
                         }
                     }
 
+                    // Bail
                     if ($rule == 'bail')
                     {
                         // fixed logic * email column
@@ -180,18 +223,19 @@ class Validate
                             break;
                         } else {
                             // vaild but un-acceptable Tld
-                            $accept = ['com', 'net', 'com.mm', 'edu'];
+                            $acceptable_tld = ['com', 'net', 'com.mm', 'edu'];
 
-                            $request_tld = substr($_POST[$field], strpos($_POST[$field], '.') - strlen($_POST[$field]) + 1);
+                            $tld = substr($_POST[$field], strpos($_POST[$field], '.') - strlen($_POST[$field]) + 1);
 
-                            if(! in_array($request_tld, $accept)) {
-                                $_SESSION['errorMessageBag'][$field] = "The $field field accepted only " . '.' .implode(', .', $accept) . ' TLD name.';
+                            if(! in_array($tld, $acceptable_tld)) {
+                                $_SESSION['errorMessageBag'][$field] = "The $field field accepted only " . '.' .implode(', .', $acceptable_tld) . ' TLD name.';
                                 break;
                             } 
                         }
                     }
                 }
             }
+
             // can't figure it out how to handle $_FILE old input
             // fail if the needle contains multiple values
             if (! in_array('image', $value)) 
@@ -200,6 +244,18 @@ class Validate
             }
 
             $previous_field = $field;
+        }
+
+        if (
+            empty($_SESSION['errorMessageBag'])
+        ) {
+            $keys = array_keys(static::$rules);
+
+            array_map(function ($value) {
+                return static::$validatedData[$value] = $_POST[$value];
+            }, $keys);
+
+            return static::$validatedData;
         }
     }
 }

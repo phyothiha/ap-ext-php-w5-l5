@@ -4,8 +4,14 @@
     require 'logic/store.php';
 
     $stmt = $pdo->prepare("
-        SELECT * FROM `categories` WHERE `id` = ?
+        SELECT 
+            * 
+        FROM 
+            `categories` 
+        WHERE 
+            `id` = ?
     ");
+
     $stmt->execute([$_GET['id']]);
 
     $category = $stmt->fetch();
@@ -33,7 +39,7 @@
 
                             <div class="card-body">
                                 <div class="form-group">
-                                    <label for="name">name</label>
+                                    <label for="name">Name</label>
                                     <input type="text" name="name" class="form-control <?php echo error('name') ? 'is-invalid' : ''; ?>" id="name" value="<?php echo e( old('name', $category->name) ); ?>">
 
                                     <?php if ( error('name') ): ?>
