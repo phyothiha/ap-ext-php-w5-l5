@@ -1,9 +1,9 @@
 <?php
 
 if (! function_exists('image_asset_url')) {
-    function image_asset_url(string $url)
+    function image_asset_url($url)
     {
-        return '/public/img/' . $url;
+        return '/public/uploads/' . $url;
     }
 }
 

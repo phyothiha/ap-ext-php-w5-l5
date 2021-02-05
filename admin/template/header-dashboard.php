@@ -35,17 +35,21 @@
         $aggregate = $stmt->fetch();
         $total = ceil($aggregate->total / $per_page_items);
 
-        $stmt = $pdo->prepare("
-            SELECT
-                *
-            FROM 
-                $resource 
-            WHERE 
-                $search_col LIKE ?  
-            ORDER BY 
-                `id` DESC 
-            LIMIT ?, ?
-        ");
+        if ($searchPreparedQuery) {
+          $stmt = $pdo->prepare($searchPreparedQuery);
+        } else {
+          $stmt = $pdo->prepare("
+              SELECT
+                  *
+              FROM 
+                  $resource 
+              WHERE 
+                  $search_col LIKE ?  
+              ORDER BY 
+                  `id` DESC 
+              LIMIT ?, ?
+          ");
+        }
 
         $stmt->bindValue(1, "%$search%");
         $stmt->bindValue(2, $offset, PDO::PARAM_INT);

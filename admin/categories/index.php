@@ -81,8 +81,12 @@
                                         </tr>
 
                                 <?php   endforeach; 
-                                    endif; 
+                                    else : 
                                 ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center bg-info">No Records</td>
+                                    </tr>
+                                <?php endif; ?>
 
                                 </tbody>
                             </table>

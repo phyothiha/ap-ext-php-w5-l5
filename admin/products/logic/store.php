@@ -1,64 +1,109 @@
 <?php
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $id = isset( $_POST['id'] ) ? $_POST['id'] : '';
+    $redirect_to = '/admin/products';
 
-    if (isset($_POST['_method']) && strtolower($_POST['_method']) == 'delete') {
+    $id = isset($_POST['id']) ? $_POST['id'] : '';
+
+    // DESTROY
+    if (
+        isset($_POST['_method']) && 
+        strtolower($_POST['_method']) == 'delete' &&
+        ! empty($id)
+    ) {
         $stmt = $pdo->prepare("
-            DELETE FROM `posts` WHERE `id` = ?
+            DELETE FROM 
+                `products` 
+            WHERE 
+                `id` = ?
         ");
+
         $result = $stmt->execute([$id]);
 
-        if ($result) {
-            echo "<script>alert('Successfully Deleted'); window.location.href='/admin/posts/index.php';</script>";
-        } else {
-            echo "<script>alert('Error'); window.location.href='/admin/posts/index.php';</script>";
+        if (! $result) {
+            echo "<script>alert('Error while executing the query.'); window.location.href='$redirect_to';</script>";   
         }
-    } else {
 
-        $validate->field([
-            'title' => ['required', 'min:2', 'max:255'],
-            'content' => ['required', 'min:5', 'max:255'],
-            'featured_image' => ['nullable', 'image'],
-        ]);
+        echo "<script>alert('Item has been successfully deleted.'); window.location.href='$redirect_to';</script>";
+    }
 
-        if (empty($_SESSION['errorMessageBag'])) {
-             $title = $_POST['title'];
-             $content = $_POST['content'];
-             $author_id = $_SESSION['user_id'];
-             $image = $_FILES['featured_image']['name'];
+    $validatedData = Validate::field([
+        'name' => ['required', 'min:2', 'max:255'],
+        'description' => ['nullable', 'min:5', 'max:255'],
+        'category_id' => ['required', 'exists:categories,id'],
+        'quantity' => ['required', 'numeric', 'digits_between:1,5'],
+        'price' => ['required', 'numeric', 'digits_between:3,5'],
+        'image' => ['nullable', 'image:png,jpg,jpeg'],
+    ]);
 
-             if ($_FILES['featured_image']['name']) {
-                 $file =  '../../images/' . $image;
-                 $image_type = pathinfo($file, PATHINFO_EXTENSION);
+    if (! empty($validatedData)) {
+        extract($validatedData);
 
-                 move_uploaded_file($_FILES['featured_image']['tmp_name'], $file);
-            } 
+         if ($_FILES['image']['name']) {
+            $image = $_FILES['image']['name'];
+            $file =  '../../public/uploads/' . $image;
+            $image_type = pathinfo($file, PATHINFO_EXTENSION);
 
-            if (isset($_POST['_method']) && strtolower($_POST['_method']) == 'put') {
+            move_uploaded_file($_FILES['image']['tmp_name'], $file);
+        }
+
+        // UPDATE
+        if (
+            isset($_POST['_method']) && 
+            ( strtolower($_POST['_method']) == 'put' ||
+            strtolower($_POST['_method']) == 'patch' ) &&
+            ! empty($id)
+        ) {
+            if (! $image) {
                 $stmt = $pdo->prepare("
-                    UPDATE `posts` SET `title` = ?, `content` = ?, `image` = ?, `author_id` = ? WHERE `id` = ?
+                    SELECT 
+                        `image`
+                    FROM 
+                        `products`
+                    WHERE
+                        `id` = ?
                 ");
-                $result = $stmt->execute([$title, $content, $image, $author_id, $id]);
-
-                if ($result) {
-                    echo "<script>alert('Successfully Updated'); window.location.href='/admin/posts/index.php';</script>";
-                } else {
-                    echo "<script>alert('Error'); window.location.href='/admin/posts/index.php';</script>";
-                }
-            } else {
-                $stmt = $pdo->prepare("
-                    INSERT INTO `posts`(`title`, `content`, `image`, `author_id`)
-                    VALUES (?, ?, ?, ?)
-                ");
-                $result = $stmt->execute([$title, $content, $image, $author_id]);
-
-                if ($result) {
-                    echo "<script>alert('Successfully Created'); window.location.href='/admin/posts/index.php';</script>";
-                } else {
-                    echo "<script>alert('Error'); window.location.href='/admin/posts/index.php';</script>";
-                }
+                $stmt->execute([$id]);
+                $image = $stmt->fetchColumn();
             }
-        }
+
+            $stmt = $pdo->prepare("
+                UPDATE 
+                    `products` 
+                SET 
+                    `name` = ?, 
+                    `description` = ? ,
+                    `category_id` = ?,
+                    `quantity` = ?,
+                    `price` = ?,
+                    `image` = ?
+                WHERE 
+                    `id` = ?
+            ");
+
+            $result = $stmt->execute([$name, $description, $category_id, $quantity, $price, $image, $id]);
+
+            if (! $result) {
+                echo "<script>alert('Error while executing the query.'); window.location.href='$redirect_to';</script>";   
+            }
+
+            echo "<script>alert('Item has been successfully updated.'); window.location.href='$redirect_to';</script>";
+
+        } else {
+            // STORE
+            $stmt = $pdo->prepare("
+                INSERT INTO 
+                    `products` (`name`, `description`, `category_id`, `quantity`, `price`, `image`)
+                VALUES 
+                    (?, ?, ?, ?, ?, ?)
+            ");
+            $result = $stmt->execute([$name, $description, $category_id, $quantity, $price, $image]);
+
+            if (! $result) {
+                echo "<script>alert('Error while executing the query.'); window.location.href='$redirect_to';</script>";   
+            }
+
+            echo "<script>alert('Item has been successfully created.'); window.location.href='$redirect_to';</script>";
+        } 
     }
 } 
