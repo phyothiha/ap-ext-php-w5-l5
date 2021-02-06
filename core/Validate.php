@@ -57,76 +57,85 @@ class Validate
                     break;
                 }
 
-                // if (
-                //     $rule == 'email'
-                // ) {
-                //     $pattern = '/^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$/';
+                if (
+                    $rule == 'email'
+                ) {
+                    $pattern = '/^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$/';
 
-                //     // if email address is invalid format.
-                //     if (
-                //         ! preg_match($pattern, $_POST[$field])
-                //     ) {
-                //         $_SESSION['errorMessageBag'][$field] = "Please enter valid email address.";
+                    // if given email address is invalid.
+                    if (
+                        ! preg_match($pattern, $_POST[$field])
+                    ) {
+                        $_SESSION['errorMessageBag'][$field] = "Please enter valid email address.";
 
-                //         break;
-                //     } else {
-                //         // vaild but un-acceptable Tld
-                //         $acceptable_tld = explode(',', $arg);
+                        break;
+                    } else {
+                        $acceptable_tld = ['com', 'net', 'com.mm', 'edu'];
 
-                //         $tld = substr($_POST[$field], strpos($_POST[$field], '.') - strlen($_POST[$field]) + 1);
+                        if ($arg) {
+                            $acceptable_tld = explode(',', $arg);
+                        }
 
-                //         if (
-                //             ! in_array($tld, $acceptable_tld)
-                //         ) {
-                //             $_SESSION['errorMessageBag'][$field] = "The $field field accepted only " . '.' .implode(', .', $acceptable_tld) . ' TLD name.';
+                        // get last domain part [.]com can become [.]com[.]mm
+                        $tld = substr($_POST[$field], strpos($_POST[$field], '.') - strlen($_POST[$field]) + 1);
 
-                //             break;
-                //         } 
-                //     }
-                // }
+                        if (
+                            ! in_array($tld, $acceptable_tld)
+                        ) {
+                            $_SESSION['errorMessageBag'][$field] = "The $field field accepted only " . '.' .implode(', .', $acceptable_tld) . ' TLD.';
 
-                // if (
-                //     $rule == 'unique'
-                // ) {
-                //     $options = explode(',', $arg);
-                //     $table = $options[0];
-                //     $column = $options[1];
-                //     $ignoreID = $options[2] ?? '';
+                            break;
+                        } 
+                    }
+                }
 
-                //     if (
-                //         $ignoreID
-                //     ) {
-                //         $stmt = static::$pdo->prepare("
-                //             SELECT * FROM $table WHERE $column = ? AND `id` != ?
+                if (
+                    $rule == 'unique'
+                ) {
 
-                //             SELECT EXISTS (
-                //                 SELECT * FROM $table WHERE $column = ? AND `id` = ?
-                //             ) as `exists`;
-                //         ");
-                //         $stmt->execute([$_POST[$field], $ignoreID]);
+                    list($table, $column, $ignoreAttribute) = explode(',', $arg);
 
-                //         if ($stmt->rowCount()) {
-                //             $_SESSION['errorMessageBag'][$field] = "The $field is already exists.";
+                    if (
+                        ! empty($ignoreAttribute)
+                    ) {
+                        $stmt = static::$pdo->prepare("
+                            SELECT 
+                                 * 
+                             FROM 
+                                 $table 
+                             WHERE
+                                 $column = ? and `id` != ?
+                        ");
+                        $stmt->execute([$_POST[$field], $ignoreAttribute]);
 
-                //             break;
-                //         }
-                //     } else {
-                //         $stmt = static::$pdo->prepare("
-                //             SELECT * FROM $table WHERE $column = ?
-                //         ");
-                //         $stmt->execute([ $_POST[$field] ]);
+                        if ($stmt->rowCount()) {
+                            $_SESSION['errorMessageBag'][$field] = "The $field is already exists.";
 
-                //         if ($stmt->rowCount()) {
-                //             $_SESSION['errorMessageBag'][$field] = "The $field is already exists.";
+                            break;
+                        }
+                    } else {
+                        $stmt = static::$pdo->prepare("
+                            SELECT 
+                                * 
+                            FROM 
+                                $table 
+                            WHERE
+                                $column = ?
+                        ");
+                        $stmt->execute([$_POST[$field]]);
 
-                //             break;
-                //         }
-                //     }
-                // }
+                        if ($stmt->rowCount()) {
+                            $_SESSION['errorMessageBag'][$field] = "The $field is already exists.";
+
+                            break;
+                        }
+                    }
+                }
 
                 if (
                     $rule == 'exists'
                 ) {
+
                     list($table, $column) = explode(',', $arg);
 
                     if ($column == 'password') {
@@ -136,10 +145,10 @@ class Validate
                             FROM 
                                 $table 
                             WHERE 
-                                `email` = ?
+                                $previous_field = ?
                         ");
-                        // fixed logic email column
-                        $stmt->execute([$_POST['email']]);
+
+                        $stmt->execute([$_POST[$previous_field]]);
 
                         if (! password_verify($_POST[$field], $stmt->fetchColumn())) {
                             $_SESSION['errorMessageBag'][$field] = "Wrong Credential.";
@@ -148,44 +157,48 @@ class Validate
                         }
                     }
 
-                    // $role = $options[2];
+                    if ($column == 'email') {
+                        $stmt = static::$pdo->prepare("
+                            SELECT 
+                                * 
+                            FROM 
+                                $table 
+                            WHERE 
+                                $column = ?
+                        ");
+                        $stmt->execute([$_POST[$field]]);
 
-                    // $type = ($options[3] == 'user') ? 0 : 1;
+                        if (! $stmt->rowCount()) {
+                            $_SESSION['errorMessageBag'][$field] = "The $field has not registered it yet!";
 
-                    $stmt = static::$pdo->prepare("
-                        SELECT 
-                            * 
-                        FROM 
-                            $table 
-                        WHERE 
-                            $column = ?
-                    ");
-                    $stmt->execute([$_POST[$field]]);
-
-                    if (! $stmt->rowCount()) {
-                        $_SESSION['errorMessageBag'][$field] = "The $field value does not exists.";
-
-                        break;
+                            break;
+                        }
                     }
                 }
 
-                // if ($rule == 'ignore' && isset($_POST['_method']) && strtolower($_POST['_method']) == 'put' && empty($_POST[$field]))
-                // {
-                //     $options = explode(',', $arg);
-                //     $table = $options[0];
-                //     $column = $options[1];
-                //     $ignoreID = $options[2] ?? '';
+                if (
+                    $rule == 'ignore'
+                ) {
+                    list($table, $column, $ignoreAttribute) = explode(',', $arg);
 
-                //     $stmt = static::$pdo->prepare("
-                //         SELECT $column FROM $table WHERE `id` = ?
-                //     ");
-                //     $stmt->execute([$ignoreID]);
+                    if (
+                        ! empty($ignoreAttribute)
+                    ) {
+                        $stmt = static::$pdo->prepare("
+                            SELECT 
+                                 * 
+                             FROM 
+                                 $table 
+                             WHERE
+                                 $column = ? and `id` != ?
+                        ");
+                        $stmt->execute([$_POST[$field], $ignoreAttribute]);
 
-                //     if ($stmt->fetchColumn()) {
-                //         break;
-                //     }
-                // }
-                // } 
+                        if ($stmt->rowCount()) {
+                            break;
+                        }
+                    } 
+                } 
 
                 if (
                     $rule == 'nullable' &&
@@ -254,39 +267,17 @@ class Validate
                     }
                 }
 
-                // if ($rule == 'bail')
-                // {
-                //     // fixed logic * email column
-                //     if (isset($_SESSION['errorMessageBag'][$previous_field])) {
-                //         break;
-                //     }
-                // }
-
-                // if ($rule == 'email') 
-                // {
-                //     $pattern = '/^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$/';
-
-                //     // if email address is invalid format.
-                //     if (! preg_match($pattern, $_POST[$field])) {
-                //         $_SESSION['errorMessageBag'][$field] = "Please enter valid email address.";
-                //         break;
-                //     } else {
-                //         // vaild but un-acceptable Tld
-                //         $acceptable_tld = ['com', 'net', 'com.mm', 'edu'];
-
-                //         $tld = substr($_POST[$field], strpos($_POST[$field], '.') - strlen($_POST[$field]) + 1);
-
-                //         if(! in_array($tld, $acceptable_tld)) {
-                //             $_SESSION['errorMessageBag'][$field] = "The $field field accepted only " . '.' .implode(', .', $acceptable_tld) . ' TLD name.';
-                //             break;
-                //         } 
-                //     }
-                // }
+                if (
+                    $rule == 'bail' &&
+                    isset($_SESSION['errorMessageBag'][$previous_field])
+                ) {
+                    break;
+                }
             }
 
             // can't figure it out how to handle $_FILE old input
             if (
-                $rule != 'image'
+                $rule != 'image' && isset($_POST[$field])
             ) {
                 $_SESSION['oldInputValues'][$field] = $_POST[$field];
             }

@@ -3,22 +3,26 @@
     require '../core/Validate.php';
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $validate->field([
-            'email' => ['required', 'email:com,net', 'exists:users,email,role,admin'],
+        $validatedData = Validate::field([
+            'email' => ['required', 'email:com,net', 'exists:users,email'],
             'password' => ['bail', 'required', 'exists:users,password'],
         ]);
 
-        if (
-            empty($_SESSION['errorMessageBag']['email']) &&
-            empty($_SESSION['errorMessageBag']['password'])
-        ) {
-
-            $email = $_POST['email'];
+        if (! empty($validatedData)) {
+            extract($validatedData);
 
             $stmt = $pdo->prepare("
-                SELECT `id`, `name`, `role` FROM `users` WHERE `email` = ?
+                SELECT 
+                    `id`, 
+                    `name`, 
+                    `role`
+                FROM 
+                    `users` 
+                WHERE 
+                    `email` = ?
             ");
-            $stmt->execute([ $email ]);
+
+            $stmt->execute([$email]);
             $user = $stmt->fetch();
 
             $_SESSION['user_id'] = $user->id;

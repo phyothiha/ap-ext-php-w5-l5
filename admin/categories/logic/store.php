@@ -12,8 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         ! empty($id)
     ) {
         $stmt = $pdo->prepare("
-            DELETE FROM `categories` 
-            WHERE `id` = ?
+            DELETE FROM 
+                `categories` 
+            WHERE 
+                `id` = ?
         ");
 
         $result = $stmt->execute([$id]);

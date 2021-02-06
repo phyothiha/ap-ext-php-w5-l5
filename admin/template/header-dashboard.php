@@ -35,7 +35,7 @@
         $aggregate = $stmt->fetch();
         $total = ceil($aggregate->total / $per_page_items);
 
-        if ($searchPreparedQuery) {
+        if (isset($searchPreparedQuery)) {
           $stmt = $pdo->prepare($searchPreparedQuery);
         } else {
           $stmt = $pdo->prepare("
@@ -91,6 +91,13 @@
                 </ul>
 
                 <!-- SEARCH FORM -->
+                <?php 
+                    if ( 
+                        $resource != 'orders'
+                        // and maybe more
+                    ) :
+                 ?>
+                
                 <form class="form-inline ml-3" method="GET" action="<?php echo $_SERVER['PHP_SELF']; ?>">
                     <div class="input-group input-group-sm">
                         <input name="search" class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search" value="<?php echo $_GET['search'] ?? ''; ?>">
@@ -102,6 +109,8 @@
                         </div>
                     </div>
                 </form>
+
+                <?php endif; ?>
                 <!-- Right navbar links -->
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
@@ -149,7 +158,7 @@
                                 <a href="/admin/categories/index.php" class="nav-link">
                                     <i class="nav-icon fas fa-list"></i>
                                     <p>
-                                        Category
+                                        Categories
                                     </p>
                                 </a>
                             </li>
@@ -158,6 +167,14 @@
                                     <i class="nav-icon fa fa-users"></i>
                                     <p>
                                         Users
+                                    </p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/orders/index.php" class="nav-link">
+                                    <i class="nav-icon fa fa-table"></i>
+                                    <p>
+                                        Sale Orders
                                     </p>
                                 </a>
                             </li>

@@ -45,8 +45,8 @@
 
                                 </div>
                                 <div class="form-group form-check">
-                                    <input type="checkbox" class="form-check-input" id="role" name="role">
-                                    <label class="form-check-label" for="role" value>Admin</label>
+                                    <input type="checkbox" class="form-check-input" id="role" name="role" <?php echo e( old('role') ) ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="role">Admin</label>
                                 </div>
                             </div>
                             <!-- /.card-body -->

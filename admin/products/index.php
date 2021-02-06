@@ -18,7 +18,7 @@
         WHERE 
             $search_col LIKE ? 
         ORDER BY 
-            `id` DESC 
+            `products`.`id` DESC
         LIMIT ?, ?
     ";
 
@@ -45,9 +45,9 @@
             JOIN
                 `categories`  
             ON
-                `products`.`category_id` = `categories`.`id`;
+                `products`.`category_id` = `categories`.`id`
             ORDER BY 
-                `id` DESC 
+                `products`.`id` DESC
             LIMIT ?, ?
       ");
         $stmt->bindValue(1, $offset, PDO::PARAM_INT);

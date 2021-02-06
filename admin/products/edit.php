@@ -42,7 +42,7 @@
                         <form role="form" action="" method="POST" enctype="multipart/form-data">
                             <?php method('PUT'); ?>
                             <?php csrf(); ?>
-                            <input type="hidden" name="id" value="<?php echo $product->id; ?>">
+                            <input type="hidden" name="id" value="<?php echo e($product->id); ?>">
 
                             <div class="card-body">
                                 <div class="form-group">
