@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (! empty($validatedData)) {
         extract($validatedData);
 
-        $role = empty($role) ? 0 : $role;
+        $role = empty($role) ? 0 : 1;
 
         // UPDATE
         if (
@@ -77,7 +77,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 $result = $stmt->execute([$name, $email, $role, $id]);
             }
-
 
             if (! $result) {
                 echo "<script>alert('Error while executing the query.'); window.location.href='$redirect_to';</script>";   

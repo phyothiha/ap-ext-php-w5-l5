@@ -93,6 +93,7 @@ class Validate
                     $rule == 'unique'
                 ) {
 
+                    // error: Undefined offset: ignoreAttribute
                     list($table, $column, $ignoreAttribute) = explode(',', $arg);
 
                     if (

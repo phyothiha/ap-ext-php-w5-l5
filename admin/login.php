@@ -64,7 +64,7 @@
 
                     <div class="mb-3">
                         <div class="input-group">
-                            <input type="password" name="password" class="form-control <?php echo isset($_SESSION['errorMessageBag']['password']) ? 'is-invalid' : ''; ?>" placeholder="Password">
+                            <input type="password" name="password" class="form-control <?php echo error('password') ? 'is-invalid' : ''; ?>" placeholder="Password">
                             <div class="input-group-append">
                                 <div class="input-group-text">
                                     <span class="fas fa-lock"></span>
