@@ -30,9 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $validatedData = Validate::field([
         'name' => ['required', 'min:5', 'max:20', 'unique:users,name,' . $id],
         'email' => ['required', 'email:com,net', 'unique:users,email,' . $id],
-        'password' => ['ignore:users,password,' . $id, 'required', 'min:8'], // ignore on update
+        'password' => ['required', 'min:6'],
+        'address' => ['required', 'min:5'],
+        'phone' => ['required', 'numeric', 'digits_between:1,13'],
         'role' => ['nullable']
-    ]); 
+    ]);
 
     if (! empty($validatedData)) {
         extract($validatedData);
@@ -57,12 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         `name` = ?, 
                         `email` = ?, 
                         `password` = ?, 
+                        `address` = ?, 
+                        `phone` = ?, 
                         `role` = ? 
                     WHERE 
                         `id` = ?
                 ");
 
-                $result = $stmt->execute([$name, $email, $password, $role, $id]);
+                $result = $stmt->execute([$name, $email, $password, $address, $phone, $role, $id]);
             } else {
                 $stmt = $pdo->prepare("
                     UPDATE 
@@ -70,12 +74,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     SET 
                         `name` = ?, 
                         `email` = ?, 
+                        `address` = ?,
+                        `phone` = ?, 
                         `role` = ? 
                     WHERE 
                         `id` = ?
                 ");
 
-                $result = $stmt->execute([$name, $email, $role, $id]);
+                $result = $stmt->execute([$name, $email, $address, $phone, $role, $id]);
             }
 
             if (! $result) {
@@ -90,12 +96,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             $stmt = $pdo->prepare("
                 INSERT INTO 
-                    `users` (`name`, `email`, `password`, `role`)
+                    `users` (`name`, `email`, `password`, `address`, `phone`, `role`)
                 VALUES 
-                    (?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?)
             ");
 
-            $result = $stmt->execute([$name, $email, $password, $role]);
+            $result = $stmt->execute([$name, $email, $password, $address, $phone, $role]);
 
             if (! $result) {
                 echo "<script>alert('Error while executing the query.'); window.location.href='$redirect_to';</script>";   

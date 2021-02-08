@@ -3,7 +3,10 @@
 
     include 'header.php'; 
 
-    if (! isset($_GET['search'])) {
+    if (
+        empty($_GET['search']) &&
+        empty($_COOKIE['search'])
+    ) {
         $stmt = $pdo->query("
             SELECT 
                 COUNT(*) as 'total' 

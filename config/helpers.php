@@ -8,8 +8,12 @@ if (! function_exists('image_asset_url')) {
 }
 
 if (! function_exists('old')) {
-    function old(string $value, string $default = '')
+    function old(string $value, $default = '')
     {
+        if (empty($default)) {
+            $default = '';
+        }
+        
         return $_SESSION['oldInputValues'][$value] ?? $default;
     }
 }

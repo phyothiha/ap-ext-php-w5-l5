@@ -1,4 +1,7 @@
 <div class="card-footer clearfix">
+    <div class="text-muted mt-1 d-inline-block">
+        Total - <?php echo $total ?> item(s)
+    </div>
     <ul class="pagination pagination-sm m-0 float-right">
         <li class="page-item 
             <?php if ($current_page <= 1) { echo 'disabled'; } ?>

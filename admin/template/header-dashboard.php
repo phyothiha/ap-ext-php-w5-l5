@@ -2,7 +2,7 @@
     $uri = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
     $resource = $uri[1];
     $current_page = 1;
-    $per_page_items = 1;
+    $per_page_items = 10;
 
     if (isset($_GET['page'])) {
         $current_page = $_GET['page'];
@@ -93,14 +93,15 @@
                 <!-- SEARCH FORM -->
                 <?php 
                     if ( 
-                        $resource != 'orders'
+                        $resource != 'orders' &&
+                        strpos($_SERVER['REQUEST_URI'], 'index.php')
                         // and maybe more
                     ) :
                  ?>
                 
                 <form class="form-inline ml-3" method="GET" action="<?php echo $_SERVER['PHP_SELF']; ?>">
                     <div class="input-group input-group-sm">
-                        <input name="search" class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search" value="<?php echo $_GET['search'] ?? ''; ?>">
+                        <input name="search" class="form-control form-control-navbar" type="text" placeholder="Search" aria-label="Search">
                         <div class="input-group-append">
                             <button class="btn btn-navbar" type="submit">
                                 <i class="fas fa-search"></i>

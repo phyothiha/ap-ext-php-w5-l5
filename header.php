@@ -1,6 +1,6 @@
 <?php
     $current_page = 1;
-    $per_page_items = 1;
+    $per_page_items = 6;
 
     if (isset($_GET['page'])) {
         $current_page = $_GET['page'];
@@ -127,7 +127,7 @@
 		<div class="search_input" id="search_input_box">
 			<div class="container">
 				<form class="d-flex justify-content-between" accept="<?php echo $_SERVER['PHP_SELF']; ?>">
-					<input type="text" class="form-control" id="search_input" placeholder="Search Here" name="search" value="<?php echo $_GET['search'] ?? ''; ?>">
+					<input type="text" class="form-control" id="search_input" placeholder="Search Here" name="search">
 					<button type="submit" class="btn"></button>
 					<span class="lnr lnr-cross" id="close_search" title="Close Search"></span>
 				</form>
