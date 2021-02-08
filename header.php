@@ -51,18 +51,6 @@
         $stmt->execute();
         $products = $stmt->fetchAll();
     }
-
-    /** Category */
-    $stmt = $pdo->query("
-        SELECT 
-            *
-        FROM 
-            `categories`
-        ORDER BY
-            `id` DESC
-    ");
-    $stmt->execute();
-    $categories = $stmt->fetchAll();
  ?>
 
 <!DOCTYPE html>
@@ -147,26 +135,4 @@
 			</div>
 		</div>
 	</section>
-	<!-- End Banner Area -->
-	<div class="container">
-		<div class="row">
-			<div class="col-xl-3 col-lg-4 col-md-5">
-				<div class="sidebar-categories">
-					<div class="head">Browse Categories</div>
-					<ul class="main-categories">
-						<li class="main-nav-list">
-
-                            <?php foreach ($categories as $category) : ?>
-
-                            <a href="#">
-                                <span class="lnr lnr-arrow-right"></span><?php echo e($category->name); ?>
-                            </a>
-                            
-                            <?php endforeach; ?>
-
-						</li>
-					</ul>
-				</div>
-			</div>
-			<div class="col-xl-9 col-lg-8 col-md-7">
-				
+	<!-- End Banner Area -->			
